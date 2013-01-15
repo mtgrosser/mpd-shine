@@ -1685,6 +1685,7 @@ if
 		results(opus, [Opus])
 		results(twolame_encoder, [TwoLAME])
 		results(wave_encoder, [WAVE])
+		results(shine_encoder, [Shine])
 fi
 
 printf '\nStreaming support:\n\t'

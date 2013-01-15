@@ -25,7 +25,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <shine.h>
+#include <shine/layer3.h>
 
 struct shine_encoder {
 	struct encoder encoder;

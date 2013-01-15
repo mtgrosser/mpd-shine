@@ -37,6 +37,7 @@ mpd.exe
 mpd.service
 stamp-h1
 tags
+test-driver
 *~
 .#*
 .stgit*
