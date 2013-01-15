@@ -644,7 +644,8 @@ libencoder_plugins_a_CPPFLAGS = $(AM_CPPFLAGS) \
 	$(TWOLAME_CFLAGS) \
 	$(patsubst -I%/FLAC,-I%,$(FLAC_CFLAGS)) \
 	$(OPUS_CFLAGS) \
-	$(VORBISENC_CFLAGS)
+	$(VORBISENC_CFLAGS) \
+	$(SHINE_CFLAGS)
 
 ENCODER_LIBS = \
 	libencoder_plugins.a \
@@ -652,7 +653,8 @@ ENCODER_LIBS = \
 	$(TWOLAME_LIBS) \
 	$(FLAC_LIBS) \
 	$(OPUS_LIBS) \
-	$(VORBISENC_LIBS)
+	$(VORBISENC_LIBS) \
+	$(SHINE_CFLAGS)
 
 libencoder_plugins_a_SOURCES = \
 	src/encoder/OggStream.hxx \
@@ -685,6 +687,10 @@ endif
 
 if ENABLE_FLAC_ENCODER
 libencoder_plugins_a_SOURCES += src/encoder/flac_encoder.c
+endif
+
+if ENABLE_SHINE_ENCODER
+libencoder_plugins_a_SOURCES += src/encoder/shine_encoder.c
 endif
 
 else

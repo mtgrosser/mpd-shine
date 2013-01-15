@@ -367,6 +367,10 @@ AC_ARG_ENABLE(sidplay,
 		[enable C64 SID support via libsidplay2]),,
 	enable_sidplay=auto)
 
+AC_ARG_ENABLE(shine-encoder,
+        AS_HELP_STRING([--enable-shine-encoder],
+                [enable the Shine fixed-point mp3 encoder]),,
+        enable_shine_encoder=auto)
 
 AC_ARG_ENABLE(shout,
 	AS_HELP_STRING([--enable-shout],
@@ -1167,6 +1171,7 @@ else
 	enable_twolame_encoder=no
 	enable_wave_encoder=no
 	enable_flac_encoder=no
+	enable_shine_encoder=no
 fi
 
 dnl ------------------------------- FLAC Encoder ------------------------------
@@ -1210,6 +1215,16 @@ if test x$enable_lame_encoder = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_LAME_ENCODER, test x$enable_lame_encoder = xyes)
 
+dnl ------------------------------ Shine Encoder ------------------------------
+MPD_AUTO_PKG(shine_encoder, SHINE, [shine],
+	[Shine encoder], [libshine not found])
+
+if test x$enable_shine_encoder = xyes; then
+	AC_DEFINE(ENABLE_SHINE_ENCODER, 1,
+		[Define to enable the Shine fixed-point MP3 encoder plugin])
+fi
+AM_CONDITIONAL(ENABLE_SHINE_ENCODER, test x$enable_shine_encoder = xyes)
+
 dnl ----------------------------- TwoLAME Encoder -----------------------------
 MPD_AUTO_PKG(twolame_encoder, TWOLAME, [twolame],
 	[TwoLAME encoder], [libtwolame not found])
@@ -1226,6 +1241,7 @@ if test x$enable_wave_encoder = xyes; then
 	AC_DEFINE(ENABLE_WAVE_ENCODER, 1,
 		[Define to enable the PCM wave encoder plugin])
 fi
+
 
 dnl --------------------------- encoder plugins test --------------------------
 if test x$enable_vorbis_encoder != xno ||
