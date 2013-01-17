@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2011 The Music Player Daemon Project
+ * Copyright (C) 2003-2013 The Music Player Daemon Project
  * http://www.musicpd.org
  *
  * This program is free software; you can redistribute it and/or modify
@@ -92,7 +92,7 @@ shine_encoder_setup(struct shine_encoder *encoder, GError **error)
 {
 	encoder->shine_config.wave.channels = 2; /* encoder.audio_format->channels; */
 	encoder->shine_config.wave.samplerate = 44100; /* (long)encoder.audio_format->samplerate:*/
-	encoder->shine_config.mpeg.mode = JOINT_STEREO;
+	encoder->shine_config.mpeg.mode = STEREO;
 	encoder->shine_config.mpeg.bitrate = encoder.bitrate;
 
 	/* TODO: return errors */
