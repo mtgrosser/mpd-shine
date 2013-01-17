@@ -17,30 +17,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "config.h"
-#include "encoder_api.h"
-#include "encoder_plugin.h"
-#include "audio_format.h"
+#include "shine_encoder.h"
 
-#include <shine/layer3.h>
 #include <assert.h>
 #include <string.h>
-
-struct shine_encoder {
-	struct encoder encoder;
-
-	struct audio_format audio_format;
-	int bitrate;
-
-	shine_config_t shine_config;
-	shine_t	*shine;
-
-	int16_t pcm_buffer[2][samp_per_frame];
-        size_t pcm_buffer_length;
-
-	unsigned char mpeg_buffer[32768];
-	size_t mpeg_buffer_length;
-};
 
 extern const struct encoder_plugin shine_encoder_plugin;
 
@@ -125,8 +105,6 @@ shine_encoder_open(struct encoder *_encoder, struct audio_format *audio_format,
 {
 	struct shine_encoder *encoder = (struct shine_encoder *)_encoder;
 
-	/* struct shine_config_t *shine_config = &encoder->shine_config; */
-
 	audio_format->format = SAMPLE_FORMAT_S16;
 	audio_format->channels = 2;
 	audio_format->samplerate = 44100;
@@ -155,6 +133,76 @@ shine_encoder_close(struct encoder *_encoder)
 }
 
 static bool
+shine_pcm_buffer_push(struct shine_encoder *encoder,
+			const void *data, size_t length,
+			G_GNUC_UNUSED GError **error)
+{
+	if (encoder->pcm_buffer_length + length <= sizeof(encoder->pcm_buffer)) {
+		/* append */
+		memcpy(encoder->pcm_buffer + encoder->pcm_buffer_length, data, length);
+		encoder->pcm_buffer_length += length;
+		return true;
+	} else {
+		 g_set_error(error, shine_encoder_quark(), 0,
+	                            "Shine PCM buffer overflow");
+		return false;
+	}
+}
+
+static size_t
+shine_pcm_buffer_shift(struct shine_encoder *encoder)
+{
+        const int16_t *src = &encoder->pcm_buffer;
+	size_t mpeg_frame_size, pcm_length;
+	unsigned int k, pcm_frames;
+
+	assert(encoder->working_buffer_length == 0);
+
+	/* PCM frame size: 4 for stereo 16 bit */
+	mpeg_frame_size = SAMPLES_PER_FRAME * audio_format_frame_size(&encoder->audio_format);
+
+	if (encoder->pcm_buffer_length < audio_format_frame_size(&encoder->audio_format)) {
+		/* discard incomplete PCM frame at the end of the buffer */
+		return 0;
+	} else {
+		/* put one frame into working buffer and shift buffer */
+
+		if (encoder->pcm_buffer_length >= mpeg_frame_size) {
+			/* full MPEG frame */
+			pcm_frames = (unsigned int)(SAMPLES_PER_FRAME * encoder.audio_format->channels);
+		} else {
+			/* incomplete MPEG frame, requires padding */
+			pcm_frames = (unsigned int)(encoder->pcm_buffer_length / audio_format_frame_size(&encoder->audio_format));
+		}
+
+		/* de-interleave and copy PCM data into working buffer */
+		for(k = 0; k < pcm_frames; k++) {
+			if (encoder.audio_format->channels == 1) {
+				/* mono */
+				encoder->working_buffer[0][k] = *src++;
+				encoder->working_buffer[1][k] = 0;
+			} else {
+				/* stereo */
+				encoder->working_buffer[0][k] = *src++;
+				encoder->working_buffer[1][k] = *src++;
+	                }
+		}
+
+		/* pad */
+		for(k = pcm_frames; k < SAMPLES_PER_FRAME; k++) {
+			encoder->working_buffer[0][k] = 0;
+			encoder->working_buffer[1][k] = 0;
+		}
+
+		/* shift PCM buffer */
+		pcm_length = pcm_frames * audio_format_frame_size(&encoder->audio_format);
+		encoder->pcm_buffer_length -= pcm_length;
+		memmove(encoder->pcm_buffer, encoder->pcm_buffer + mpeg_frame_size, sizeof(encoder->pcm_buffer) - mpeg_frame_size);
+		return(encoder->pcm_buffer_length);
+	}
+}
+
+static bool
 shine_encoder_write(struct encoder *_encoder,
 			const void *data, size_t length,
 			G_GNUC_UNUSED GError **error)
@@ -164,13 +212,33 @@ shine_encoder_write(struct encoder *_encoder,
 	const int16_t *src = (const int16_t*)data;
 	// int bytes_out;
 	long encoded_length;
+	unsigned num_pcm_frames;
 	unsigned int i, k;
 	unsigned char *encoded_data;
 
-	assert(encoder->mpeg_buffer_length == 0);
+	assert(encoder->working_buffer_length == 0);
 
-	num_frames =
+	num_pcm_frames =
 		length / audio_format_frame_size(&encoder->audio_format); /* 4 for stereo 16 bit */
+
+	// push new data to pcm buffer
+	// work off pcm buffer framewise
+	// push encoded frames to mpeg buffer
+
+	if (!shine_pcm_buffer_push(encoder, data, length, error)) {
+		L3_close(encoder->shine);
+		return(false);
+	}
+
+	while (shine_pcm_buffer_shift(encoder) > 0) {
+    data = L3_encode_frame(s,buffer,&written);
+    write_mp3(written, data, &config);
+  }
+
+
+
+
+	if (num_samples + encoder->pcm_ 
 
 	for (i = 0; i < num_frames; i++) {
 
