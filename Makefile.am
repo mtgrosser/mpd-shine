@@ -654,7 +654,8 @@ ENCODER_LIBS = \
 	$(FLAC_LIBS) \
 	$(OPUS_LIBS) \
 	$(VORBISENC_LIBS) \
-	$(SHINE_CFLAGS)
+	$(SHINE_CFLAGS) \
+	$(SHINE_LIBS)
 
 libencoder_plugins_a_SOURCES = \
 	src/encoder/OggStream.hxx \
@@ -690,7 +691,9 @@ libencoder_plugins_a_SOURCES += src/encoder/flac_encoder.c
 endif
 
 if ENABLE_SHINE_ENCODER
-libencoder_plugins_a_SOURCES += src/encoder/shine_encoder.c
+libencoder_plugins_a_SOURCES += \
+	src/encoder/shine_encoder.c \
+	src/encoder/shine_encoder.h
 endif
 
 else

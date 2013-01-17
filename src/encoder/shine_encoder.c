@@ -90,10 +90,10 @@ shine_encoder_finish(struct encoder *_encoder)
 static bool
 shine_encoder_setup(struct shine_encoder *encoder, GError **error)
 {
-	encoder->shine_config.wave.channels = 2; /* encoder.audio_format->channels; */
-	encoder->shine_config.wave.samplerate = 44100; /* (long)encoder.audio_format->samplerate:*/
+	encoder->shine_config.wave.channels = 2; /* encoder->audio_format.channels; */
+	encoder->shine_config.wave.samplerate = 44100; /* (long)encoder_>audio_format.sample_rate:*/
 	encoder->shine_config.mpeg.mode = STEREO;
-	encoder->shine_config.mpeg.bitrate = encoder.bitrate;
+	encoder->shine_config.mpeg.bitr = encoder->bitrate;
 
 	/* TODO: return errors */
 	return true;
@@ -107,7 +107,7 @@ shine_encoder_open(struct encoder *_encoder, struct audio_format *audio_format,
 
 	audio_format->format = SAMPLE_FORMAT_S16;
 	audio_format->channels = 2;
-	audio_format->samplerate = 44100;
+	audio_format->sample_rate = 44100;
 	encoder->audio_format = *audio_format;
 	if (!shine_encoder_setup(encoder, error)) {
 		return false;
@@ -168,7 +168,7 @@ shine_pcm_buffer_push(struct shine_encoder *encoder,
 static size_t
 shine_pcm_buffer_shift(struct shine_encoder *encoder)
 {
-        const int16_t *src = &encoder->pcm_buffer;
+        const int16_t *src = encoder->pcm_buffer;
 	size_t mpeg_frame_size, pcm_length;
 	unsigned int k, pcm_frames;
 
@@ -185,7 +185,7 @@ shine_pcm_buffer_shift(struct shine_encoder *encoder)
 
 		if (encoder->pcm_buffer_length >= mpeg_frame_size) {
 			/* full MPEG frame */
-			pcm_frames = (unsigned int)(SAMPLES_PER_FRAME * encoder.audio_format->channels);
+			pcm_frames = (unsigned int)(SAMPLES_PER_FRAME * encoder->audio_format.channels);
 		} else {
 			/* incomplete MPEG frame, requires padding */
 			pcm_frames = (unsigned int)(encoder->pcm_buffer_length / audio_format_frame_size(&encoder->audio_format));
@@ -193,7 +193,7 @@ shine_pcm_buffer_shift(struct shine_encoder *encoder)
 
 		/* de-interleave and copy PCM data into working buffer */
 		for(k = 0; k < pcm_frames; k++) {
-			if (encoder.audio_format->channels == 1) {
+			if (encoder->audio_format.channels == 1) {
 				/* mono */
 				encoder->working_buffer[0][k] = *src++;
 				encoder->working_buffer[1][k] = 0;
@@ -242,13 +242,8 @@ shine_encoder_write(struct encoder *_encoder,
 {
 	struct shine_encoder *encoder = (struct shine_encoder *)_encoder;
 
-	const int16_t *src = (const int16_t*)data;
-	// int bytes_out;
 	long encoded_length;
-	unsigned num_pcm_frames;
-	unsigned int i, k;
 	unsigned char *encoded_data;
-	long encoded_length;
 
 	assert(encoder->working_buffer_length == 0);
 
@@ -270,7 +265,7 @@ shine_encoder_write(struct encoder *_encoder,
 	        }
 
 		/* Append MPEG data to buffer */
-		if (!shine_mpeg_buffer_push(encoder, encoded_data, encoded_length, error) {
+		if (!shine_mpeg_buffer_push(encoder, encoded_data, encoded_length, error)) {
 			L3_close(encoder->shine);
 			return false;
 		}

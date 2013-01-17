@@ -1222,6 +1222,7 @@ MPD_AUTO_PKG(shine_encoder, SHINE, [shine],
 if test x$enable_shine_encoder = xyes; then
 	AC_DEFINE(ENABLE_SHINE_ENCODER, 1,
 		[Define to enable the Shine fixed-point MP3 encoder plugin])
+	SHINE_LIBS="-lshine -lm"
 fi
 AM_CONDITIONAL(ENABLE_SHINE_ENCODER, test x$enable_shine_encoder = xyes)
 

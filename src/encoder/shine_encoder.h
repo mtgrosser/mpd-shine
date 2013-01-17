@@ -27,7 +27,7 @@
 
 #include <shine/layer3.h>
 
-static const unsigned SAMPLES_PER_FRAME = samp_per_frame;
+#define SAMPLES_PER_FRAME 1152
 
 struct shine_encoder {
         struct encoder encoder;
@@ -36,16 +36,26 @@ struct shine_encoder {
         int bitrate;
 
         shine_config_t shine_config;
-        shine_t *shine;
+        shine_t shine;
 
-        int16_t pcm_buffer[1<<16]; /* 128k of PCM data */
+        int16_t pcm_buffer[65537]; /* 128k of PCM data */
         size_t pcm_buffer_length;
 
-	int16_t working_buffer[2][SAMPLES_PER_FRAME]; /* PCM equivalent of one MPEG frame */
+	int16_t working_buffer[2][samp_per_frame];
 	size_t working_buffer_length;
 
         unsigned char mpeg_buffer[32768];
         size_t mpeg_buffer_length;
 };
+
+static bool
+shine_mpeg_buffer_push(struct shine_encoder *encoder,
+                        const void *data, size_t length,
+                        G_GNUC_UNUSED GError **error);
+
+
+static size_t
+shine_pcm_buffer_shift(struct shine_encoder *encoder);
+
 
 #endif
