@@ -38,11 +38,10 @@ struct shine_encoder {
         shine_config_t shine_config;
         shine_t shine;
 
-        int16_t pcm_buffer[65537]; /* 128k of PCM data */
+        int16_t pcm_buffer[32768];
         size_t pcm_buffer_length;
 
 	int16_t working_buffer[2][samp_per_frame];
-	size_t working_buffer_length;
 
         unsigned char mpeg_buffer[32768];
         size_t mpeg_buffer_length;
@@ -55,7 +54,10 @@ shine_mpeg_buffer_push(struct shine_encoder *encoder,
 
 
 static size_t
-shine_pcm_buffer_shift(struct shine_encoder *encoder);
+shine_pcm_buffer_shift(struct shine_encoder *encoder, bool flush);
 
+
+static void
+shine_encoder_close(struct encoder *_encoder);
 
 #endif
