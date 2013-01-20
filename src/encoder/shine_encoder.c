@@ -164,19 +164,20 @@ shine_encoder_flush(struct encoder *_encoder, G_GNUC_UNUSED GError **error)
 
 	unsigned char *encoded_data;
 	long encoded_length;
+g_message("%s", "shine_encoder_flush");
 
 	encoded_data = L3_flush(encoder->shine, &encoded_length);
 
 	if(encoded_data != NULL)
-g_message("%s", "shine_encoder_flush");
 		shine_mpeg_buffer_push(encoder, encoded_data, encoded_length, error);
-	return true;
+
+		return true;
 }
 
 static bool
 shine_pcm_buffer_push(struct shine_encoder *encoder,
-			const void *data, size_t length,
-			G_GNUC_UNUSED GError **error)
+                      const void *data, size_t length,
+                      G_GNUC_UNUSED GError **error)
 {
 	if (encoder->pcm_buffer_length + length <= sizeof(encoder->pcm_buffer)) {
 //g_message("shine_pcm_buffer_push(length: %u, pcm_buffer_length: %u)", length, encoder->pcm_buffer_length);
@@ -185,8 +186,8 @@ shine_pcm_buffer_push(struct shine_encoder *encoder,
 		encoder->pcm_buffer_length += length;
 		return true;
 	} else {
-		 g_set_error(error, shine_encoder_quark(), 0,
-	                            "Shine PCM buffer overflow");
+		g_set_error(error, shine_encoder_quark(), 0,
+		            "Shine PCM buffer overflow");
 		return false;
 	}
 }
@@ -227,13 +228,13 @@ shine_pcm_buffer_shift(struct shine_encoder *encoder, bool flush)
 			/* stereo */
 			encoder->working_buffer[0][k] = *src++;
 			encoder->working_buffer[1][k] = *src++;
-                }
+		}
 	}
 
 	/* pad */
 	for(k = pcm_frames; k < SAMPLES_PER_FRAME; k++) {
-		encoder->working_buffer[0][k] = 0;
-		encoder->working_buffer[1][k] = 0;
+		/* encoder->working_buffer[0][k] = 0;
+		encoder->working_buffer[1][k] = 0; */
 	}
 
 	// g_message("deinterleaved %u", pcm_frames);
@@ -267,8 +268,8 @@ shine_mpeg_buffer_push(struct shine_encoder *encoder,
 
 static bool
 shine_encoder_write(struct encoder *_encoder,
-			const void *data, size_t length,
-			G_GNUC_UNUSED GError **error)
+                    const void *data, size_t length,
+                    G_GNUC_UNUSED GError **error)
 {
 	struct shine_encoder *encoder = (struct shine_encoder *)_encoder;
 
