@@ -24,8 +24,10 @@
 #include "encoder_api.h"
 #include "encoder_plugin.h"
 #include "audio_format.h"
+#include "fifo_buffer.h"
 
 #include <shine/layer3.h>
+#include <stdio.h>
 
 #define SAMPLES_PER_FRAME 1152
 
@@ -38,12 +40,17 @@ struct shine_encoder {
         shine_config_t shine_config;
         shine_t shine;
 
-        int16_t pcm_buffer[32768];
-        size_t pcm_buffer_length;
+	FILE *file;
+
+	struct fifo_buffer *pcm_buffer;
+        /* int16_t pcm_buffer[32768];
+        size_t pcm_buffer_length; */
 
 	int16_t working_buffer[2][samp_per_frame];
+	/* int16_t dup_buffer[2][samp_per_frame]; */
 
-        unsigned char mpeg_buffer[32768];
+	//struct fifo_buffer *mpeg_buffer;
+	unsigned char mpeg_buffer[32768];
         size_t mpeg_buffer_length;
 };
 
@@ -53,7 +60,7 @@ shine_mpeg_buffer_push(struct shine_encoder *encoder,
                         G_GNUC_UNUSED GError **error);
 
 
-static size_t
+static bool
 shine_pcm_buffer_shift(struct shine_encoder *encoder, bool flush);
 
 
